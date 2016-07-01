@@ -6,28 +6,42 @@
     <script src="../dist/juju.js"></script>
   </head>
   <body>
-
+    <div id="services"></div>
   </body>
   <script type="text/javascript">
-    var juju = new Juju('10.0.4.45:17070', '7fcd1a6d-2d62-44cb-8ce6-43e232a434d5');
+    var juju = new Juju.model('10.0.4.45:17070', '7fcd1a6d-2d62-44cb-8ce6-43e232a434d5');
+    var services = {}
 
-    juju.login('admin', 'b72115f03a6f8447b10ba54be4b10f3b').then(function() {
-      debugger
+    function redraw(type, set) {
+      parent = $('#' + type);
+      for(var key in set) {
+        var div;
+        div = parent.find('#' + key)
+        if(div.length == 0){
+          div = $('<div id="' + set[key].Name + '">')
+          parent.append(div);
+        }
+        var life;
+        if( set[key].Life === 'alive' ) {
+          life = 'Yes'
+        } else {
+          life = 'No'
+        }
+        lines = [
+          "Name: " + set[key].Name,
+          "Charmstore URL: " + set[key].CharmURL,
+          "Alive: " + life,
+        ]
+        div.html(lines.join(' | '))
+      }
+    }
+
+    juju.login('admin', 'b72115f03a6f8447b10ba54be4b10f3b');
+    document.addEventListener('service-change', function(data) {
+      change = data.detail
+      services[change.Name] = change
+      redraw('services', services)
     })
-    // login = juju.login('admin', 'b72115f03a6f8447b10ba54be4b10f3b');
 
-    // login.then(do_something_else)
-
-    // promises = []
-    // promises.push(juju.get_models())
-    // promises.push(juju.get_users())
-    // promises.push(juju.get_services())
-
-    // Promise.resolve_all(promises)
-
-
-    // juju.login('admin', 'b72115f03a6f8447b10ba54be4b10f3b', function() {
-    //   debugger
-    // });
   </script>
 </html>

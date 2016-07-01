@@ -13,7 +13,7 @@
     "test": "npm run lint && npm run unit",
     "dev": "webpack --watch --config build/webpack.dev.config.js & npm run serve-test",
     "serve-test": "webpack-dev-server --config build/webpack.test.config.js --host 0.0.0.0 --port 8081",
-    "lint": "eslint src",
+    "lint": "eslint src test build",
     "unit": "karma start build/karma.unit.config.js",
     "sauce": "karma start build/karma.sauce.config.js",
     "sauce-all": "npm run sauce && npm run sauce -- 1 && npm run sauce -- 2"

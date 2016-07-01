@@ -19,8 +19,6 @@ do ->
     logger =
       log: ->
       error: ->
-  if location.protocol == 'file:'
-    logger.error 'WARNING: web-socket-js doesn\'t work in file:///... URL ' + 'unless you set Flash Security Settings properly. ' + 'Open the page via Web server i.e. http://...'
 
   ###*
   # Our own implementation of WebSocket class using Flash.
@@ -148,32 +146,6 @@ do ->
       handler.apply this, [ event ]
     return
 
-  ###*
-  # Handles an event from Flash.
-  # @param {Object} flashEvent
-  ###
-
-  WebSocket::__handleEvent = (flashEvent) ->
-    if 'readyState' of flashEvent
-      @readyState = flashEvent.readyState
-    if 'protocol' of flashEvent
-      @protocol = flashEvent.protocol
-    jsEvent = undefined
-    if flashEvent.type == 'open' or flashEvent.type == 'error'
-      jsEvent = @__createSimpleEvent(flashEvent.type)
-    else if flashEvent.type == 'close'
-      jsEvent = @__createSimpleEvent('close')
-      jsEvent.wasClean = if flashEvent.wasClean then true else false
-      jsEvent.code = flashEvent.code
-      jsEvent.reason = flashEvent.reason
-    else if flashEvent.type == 'message'
-      data = decodeURIComponent(flashEvent.message)
-      jsEvent = @__createMessageEvent('message', data)
-    else
-      throw 'unknown event type: ' + flashEvent.type
-    @dispatchEvent jsEvent
-    return
-
   WebSocket::__createSimpleEvent = (type) ->
     if document.createEvent and window.Event
       event = document.createEvent('Event')
@@ -215,125 +187,13 @@ do ->
   WebSocket.CLOSING = 2
   WebSocket.CLOSED = 3
   # Field to check implementation of WebSocket.
-  WebSocket.__isFlashImplementation = true
+  WebSocket.__isFlashImplementation = false
   WebSocket.__initialized = false
   WebSocket.__flash = null
   WebSocket.__instances = {}
   WebSocket.__tasks = []
   WebSocket.__nextId = 0
 
-  ###*
-  # Load a new flash security policy file.
-  # @param {string} url
-  ###
-
-  WebSocket.loadFlashPolicyFile = (url) ->
-    WebSocket.__addTask ->
-      WebSocket.__flash.loadManualPolicyFile url
-      return
-    return
-
-  ###*
-  # Loads WebSocketMain.swf and creates WebSocketMain object in Flash.
-  ###
-
-  WebSocket.__initialize = ->
-    if WebSocket.__initialized
-      return
-    WebSocket.__initialized = true
-    if WebSocket.__swfLocation
-      # For backword compatibility.
-      window.WEB_SOCKET_SWF_LOCATION = WebSocket.__swfLocation
-    if !window.WEB_SOCKET_SWF_LOCATION
-      logger.error '[WebSocket] set WEB_SOCKET_SWF_LOCATION to location of WebSocketMain.swf'
-      return
-    if !window.WEB_SOCKET_SUPPRESS_CROSS_DOMAIN_SWF_ERROR and !WEB_SOCKET_SWF_LOCATION.match(/(^|\/)WebSocketMainInsecure\.swf(\?.*)?$/) and WEB_SOCKET_SWF_LOCATION.match(/^\w+:\/\/([^\/]+)/)
-      swfHost = RegExp.$1
-      if location.host != swfHost
-        logger.error '[WebSocket] You must host HTML and WebSocketMain.swf in the same host ' + '(\'' + location.host + '\' != \'' + swfHost + '\'). ' + 'See also \'How to host HTML file and SWF file in different domains\' section ' + 'in README.md. If you use WebSocketMainInsecure.swf, you can suppress this message ' + 'by WEB_SOCKET_SUPPRESS_CROSS_DOMAIN_SWF_ERROR = true;'
-    container = document.createElement('div')
-    container.id = 'webSocketContainer'
-    # Hides Flash box. We cannot use display: none or visibility: hidden because it prevents
-    # Flash from loading at least in IE. So we move it out of the screen at (-100, -100).
-    # But this even doesn't work with Flash Lite (e.g. in Droid Incredible). So with Flash
-    # Lite, we put it at (0, 0). This shows 1x1 box visible at left-top corner but this is
-    # the best we can do as far as we know now.
-    container.style.position = 'absolute'
-    if WebSocket.__isFlashLite()
-      container.style.left = '0px'
-      container.style.top = '0px'
-    else
-      container.style.left = '-100px'
-      container.style.top = '-100px'
-    holder = document.createElement('div')
-    holder.id = 'webSocketFlash'
-    container.appendChild holder
-    document.body.appendChild container
-    # See this article for hasPriority:
-    # http://help.adobe.com/en_US/as3/mobile/WS4bebcd66a74275c36cfb8137124318eebc6-7ffd.html
-    swfobject.embedSWF WEB_SOCKET_SWF_LOCATION, 'webSocketFlash', '1', '1', '10.0.0', null, null, {
-      hasPriority: true
-      swliveconnect: true
-      allowScriptAccess: 'always'
-    }, null, (e) ->
-      if !e.success
-        logger.error '[WebSocket] swfobject.embedSWF failed'
-      return
-    return
-
-  ###*
-  # Called by Flash to notify JS that it's fully loaded and ready
-  # for communication.
-  ###
-
-  WebSocket.__onFlashInitialized = ->
-    # We need to set a timeout here to avoid round-trip calls
-    # to flash during the initialization process.
-    setTimeout (->
-      WebSocket.__flash = document.getElementById('webSocketFlash')
-      WebSocket.__flash.setCallerUrl location.href
-      WebSocket.__flash.setDebug ! !window.WEB_SOCKET_DEBUG
-      i = 0
-      while i < WebSocket.__tasks.length
-        WebSocket.__tasks[i]()
-        ++i
-      WebSocket.__tasks = []
-      return
-    ), 0
-    return
-
-  ###*
-  # Called by Flash to notify WebSockets events are fired.
-  ###
-
-  WebSocket.__onFlashEvent = ->
-    setTimeout (->
-      try
-        # Gets events using receiveEvents() instead of getting it from event object
-        # of Flash event. This is to make sure to keep message order.
-        # It seems sometimes Flash events don't arrive in the same order as they are sent.
-        events = WebSocket.__flash.receiveEvents()
-        i = 0
-        while i < events.length
-          WebSocket.__instances[events[i].webSocketId].__handleEvent events[i]
-          ++i
-      catch e
-        logger.error e
-      return
-    ), 0
-    true
-
-  # Called by Flash.
-
-  WebSocket.__log = (message) ->
-    logger.log decodeURIComponent(message)
-    return
-
-  # Called by Flash.
-
-  WebSocket.__error = (message) ->
-    logger.error decodeURIComponent(message)
-    return
 
   WebSocket.__addTask = (task) ->
     if WebSocket.__flash
@@ -342,26 +202,3 @@ do ->
       WebSocket.__tasks.push task
     return
 
-  ###*
-  # Test if the browser is running flash lite.
-  # @return {boolean} True if flash lite is running, false otherwise.
-  ###
-
-  WebSocket.__isFlashLite = ->
-    if !window.navigator or !window.navigator.mimeTypes
-      return false
-    mimeType = window.navigator.mimeTypes['application/x-shockwave-flash']
-    if !mimeType or !mimeType.enabledPlugin or !mimeType.enabledPlugin.filename
-      return false
-    if mimeType.enabledPlugin.filename.match(/flashlite/i) then true else false
-
-  if !window.WEB_SOCKET_DISABLE_AUTO_INITIALIZATION
-    # NOTE:
-    #   This fires immediately if web_socket.js is dynamically loaded after
-    #   the document is loaded.
-    swfobject.addDomLoadEvent ->
-      WebSocket.__initialize()
-      return
-  return
-
-# module.exports = Websocket
