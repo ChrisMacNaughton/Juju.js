@@ -7,13 +7,20 @@
     "dist/juju.js.map",
     "src"
   ],
+  "license": "MIT",
+  "repository":"https://github.com/ChrisMacNaughton/Juju.js",
   "scripts": {
-    "lint": "eslint src",
+    "test": "npm run lint && npm run unit",
     "dev": "webpack --watch --config build/webpack.dev.config.js & npm run serve-test",
-    "serve-test": "webpack-dev-server --config build/webpack.test.config.js --host 0.0.0.0 --port 8081"
+    "serve-test": "webpack-dev-server --config build/webpack.test.config.js --host 0.0.0.0 --port 8081",
+    "lint": "eslint src",
+    "unit": "karma start build/karma.unit.config.js",
+    "sauce": "karma start build/karma.sauce.config.js",
+    "sauce-all": "npm run sauce && npm run sauce -- 1 && npm run sauce -- 2"
   },
 
   "devDependencies": {
+    "codecov.io": "^0.1.2",
     "eslint": "^2.9.0",
     "coffee-script": "^1.10.0",
     "coffee-loader": "^0.7.2",
