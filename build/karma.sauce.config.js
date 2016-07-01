@@ -47,7 +47,7 @@ module.exports = function (config) {
     sauceLabs: {
       testName: 'Juju.js unit tests',
       recordScreenshots: false,
-      build: process.env.TRAVIS_BUILD_NUM || process.env.SAUCE_BUILD_ID || Date.now()
+      build: process.env.TRAVIS_JOB_NUMBER || process.env.SAUCE_BUILD_ID || Date.now()
     },
     // mobile emulators are really slow
     captureTimeout: 300000,
