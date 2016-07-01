@@ -1,0 +1,37 @@
+{
+  "name": "juju.js",
+  "description": "Javascript jlibrary for interacting with Juju",
+  "main": "juju.js",
+    "files": [
+    "dist/juju.js",
+    "dist/juju.js.map",
+    "src"
+  ],
+  "scripts": {
+    "lint": "eslint src",
+    "dev": "webpack --watch --config build/webpack.dev.config.js & npm run serve-test",
+    "serve-test": "webpack-dev-server --config build/webpack.test.config.js --host 0.0.0.0 --port 8081"
+  },
+
+  "devDependencies": {
+    "eslint": "^2.9.0",
+    "coffee-script": "^1.10.0",
+    "coffee-loader": "^0.7.2",
+    "webpack": "^1.12.2",
+    "webpack-dev-server": "^1.12.1",
+    "jasmine-core": "^2.4.1",
+    "karma": "^0.13.8",
+    "karma-chrome-launcher": "^0.2.0",
+    "karma-coverage": "^0.5.0",
+    "karma-firefox-launcher": "^0.1.6",
+    "karma-ie-launcher": "^0.2.0",
+    "karma-jasmine": "^0.3.6",
+    "karma-phantomjs-launcher": "^0.2.1",
+    "karma-safari-launcher": "^0.1.1",
+    "karma-sauce-launcher": "^0.3.0",
+    "karma-sourcemap-loader": "^0.3.7",
+    "karma-webpack": "^1.7.0",
+    "phantomjs": "^1.9.17",
+    "object-assign": "^4.0.1"
+  }
+}

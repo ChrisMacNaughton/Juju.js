@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Juju Basic Demo</title>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
+    <script src="../dist/juju.js"></script>
+  </head>
+  <body>
+
+  </body>
+  <script type="text/javascript">
+    var juju = new Juju('10.0.4.45:17070', '7fcd1a6d-2d62-44cb-8ce6-43e232a434d5');
+
+    juju.login('admin', 'b72115f03a6f8447b10ba54be4b10f3b').then(function() {
+      debugger
+    })
+  </script>
+</html>
